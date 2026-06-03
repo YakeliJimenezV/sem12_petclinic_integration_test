@@ -7,7 +7,10 @@ import com.tecsup.petclinic.exceptions.SpecialtyNotFoundException;
 import java.util.List;
 
 public interface SpecialtyService {
-
+    /**
+     * Create a new specialty.
+     * @throws InvalidScheduleException if hOpen >= hClose
+     */
     SpecialtyDTO create(SpecialtyDTO dto) throws InvalidScheduleException;
 
     /**
@@ -37,8 +40,13 @@ public interface SpecialtyService {
     List<SpecialtyDTO> findByOffice(String office);
 
     /**
-     * Return all specialties.
+     * Return all specialties as entity list (internal use).
      */
     List<Specialty> findAll();
+
+    /**
+     * Return all specialties as DTO list (for REST responses).
+     */
+    List<SpecialtyDTO> findAllDTO();
 
 }

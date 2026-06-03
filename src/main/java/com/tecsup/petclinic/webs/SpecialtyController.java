@@ -1,6 +1,6 @@
 package com.tecsup.petclinic.webs;
+
 import com.tecsup.petclinic.dtos.SpecialtyDTO;
-import com.tecsup.petclinic.entities.Specialty;
 import com.tecsup.petclinic.exceptions.InvalidScheduleException;
 import com.tecsup.petclinic.exceptions.SpecialtyNotFoundException;
 import com.tecsup.petclinic.services.SpecialtyService;
@@ -10,9 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+/**
+ * REST controller for Specialty endpoints.
+ * @author jgomezm
+ */
 @RestController
 @Slf4j
 public class SpecialtyController {
+
     private final SpecialtyService specialtyService;
 
     public SpecialtyController(SpecialtyService specialtyService) {
@@ -20,17 +25,32 @@ public class SpecialtyController {
     }
 
     /**
-     * GET /specialties — return all specialties
+     * GET /specialties              → all specialties
+     * GET /specialties?name=X       → filter by name
+     * GET /specialties?office=X     → filter by office
      */
     @GetMapping("/specialties")
-    public ResponseEntity<List<Specialty>> findAllSpecialties() {
-        List<Specialty> specialties = specialtyService.findAll();
-        log.info("specialties: " + specialties);
-        return ResponseEntity.ok(specialties);
+    public ResponseEntity<List<SpecialtyDTO>> findSpecialties(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String office) {
+
+        if (name != null) {
+            List<SpecialtyDTO> list = specialtyService.findByName(name);
+            log.info("findByName({}) -> {}", name, list);
+            return ResponseEntity.ok(list);
+        }
+        if (office != null) {
+            List<SpecialtyDTO> list = specialtyService.findByOffice(office);
+            log.info("findByOffice({}) -> {}", office, list);
+            return ResponseEntity.ok(list);
+        }
+        List<SpecialtyDTO> list = specialtyService.findAllDTO();
+        log.info("findAll -> {}", list);
+        return ResponseEntity.ok(list);
     }
 
     /**
-     * GET /specialties/{id} — find by id
+     * GET /specialties/{id}
      */
     @GetMapping("/specialties/{id}")
     ResponseEntity<SpecialtyDTO> findById(@PathVariable Integer id) {
@@ -42,7 +62,7 @@ public class SpecialtyController {
     }
 
     /**
-     * POST /specialties — create
+     * POST /specialties
      */
     @PostMapping("/specialties")
     ResponseEntity<?> create(@RequestBody SpecialtyDTO dto) {
@@ -55,7 +75,7 @@ public class SpecialtyController {
     }
 
     /**
-     * PUT /specialties/{id} — update
+     * PUT /specialties/{id}
      */
     @PutMapping("/specialties/{id}")
     ResponseEntity<?> update(@RequestBody SpecialtyDTO dto,
@@ -66,8 +86,7 @@ public class SpecialtyController {
             existing.setOffice(dto.getOffice());
             existing.setHOpen(dto.getHOpen());
             existing.setHClose(dto.getHClose());
-            SpecialtyDTO updated = specialtyService.update(existing);
-            return ResponseEntity.ok(updated);
+            return ResponseEntity.ok(specialtyService.update(existing));
         } catch (SpecialtyNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (InvalidScheduleException e) {
@@ -76,7 +95,7 @@ public class SpecialtyController {
     }
 
     /**
-     * DELETE /specialties/{id} — delete
+     * DELETE /specialties/{id}
      */
     @DeleteMapping("/specialties/{id}")
     ResponseEntity<String> delete(@PathVariable Integer id) {
@@ -87,5 +106,4 @@ public class SpecialtyController {
             return ResponseEntity.notFound().build();
         }
     }
-
 }
