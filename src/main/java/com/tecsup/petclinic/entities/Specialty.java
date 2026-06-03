@@ -9,21 +9,19 @@ import lombok.ToString;
 import java.util.Set;
 
 /**
- * 
  * @author jgomezm
- *
  */
 @NoArgsConstructor
 @Entity(name = "specialties")
 @Data
 public class Specialty {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-	@Column(name = "name")
-	private String name;
+    @Column(name = "name")
+    private String name;
 
     @Column(name = "office")
     private String office;
@@ -34,8 +32,8 @@ public class Specialty {
     @Column(name = "h_close")
     private Integer hClose;
 
-	@ManyToMany(mappedBy = "specialties", fetch = FetchType.LAZY)
-	@ToString.Exclude
-	//@EqualsAndHashCode.Exclude
-	private Set<Vet> vets;
+    @ManyToMany(mappedBy = "specialties", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Vet> vets;
 }
