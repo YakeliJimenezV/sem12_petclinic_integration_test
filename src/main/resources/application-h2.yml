@@ -30,6 +30,7 @@ spring:
     rest :
       basePath : /api
 
+
 logging :
   # DEBUG, INFO , ERROR
   level :

@@ -1,4 +1,5 @@
 package com.tecsup.petclinic.services;
+
 import com.tecsup.petclinic.dtos.SpecialtyDTO;
 import com.tecsup.petclinic.entities.Specialty;
 import com.tecsup.petclinic.exceptions.InvalidScheduleException;
@@ -11,9 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+
 @Service
 @Slf4j
-public class SpecialtyServiceImpl implements SpecialtyService{
+public class SpecialtyServiceImpl implements SpecialtyService {
+
     private final SpecialtyRepository specialtyRepository;
     private final SpecialtyMapper     specialtyMapper;
 
@@ -23,14 +27,26 @@ public class SpecialtyServiceImpl implements SpecialtyService{
         this.specialtyMapper     = specialtyMapper;
     }
 
-    // ─── Validación de horario ──────────────────────────────────────────────
+    // ─── Validaciones ──────────────────────────────────────────────────────
 
     private void validateSchedule(SpecialtyDTO dto) throws InvalidScheduleException {
+
+        // Regla 1: h_open debe ser menor que h_close
         if (dto.getHOpen() != null && dto.getHClose() != null
                 && dto.getHOpen() >= dto.getHClose()) {
             throw new InvalidScheduleException(
                     "h_open (" + dto.getHOpen() + ") must be less than h_close ("
                             + dto.getHClose() + ")");
+        }
+
+        // Regla 2: horas deben estar en rango 0-23
+        if (dto.getHOpen()  != null && (dto.getHOpen()  < 0 || dto.getHOpen()  > 23)) {
+            throw new InvalidScheduleException(
+                    "h_open (" + dto.getHOpen() + ") must be between 0 and 23");
+        }
+        if (dto.getHClose() != null && (dto.getHClose() < 0 || dto.getHClose() > 23)) {
+            throw new InvalidScheduleException(
+                    "h_close (" + dto.getHClose() + ") must be between 0 and 23");
         }
     }
 
@@ -88,5 +104,13 @@ public class SpecialtyServiceImpl implements SpecialtyService{
     @Override
     public List<Specialty> findAll() {
         return specialtyRepository.findAll();
+    }
+
+    @Override
+    public List<SpecialtyDTO> findAllDTO() {
+        return specialtyRepository.findAll()
+                .stream()
+                .map(specialtyMapper::mapToDto)
+                .collect(Collectors.toList());
     }
 }
