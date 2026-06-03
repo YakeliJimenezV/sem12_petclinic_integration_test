@@ -18,19 +18,67 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@AutoConfigureMockMvc
 @SpringBootTest
+@AutoConfigureMockMvc
 @Slf4j
 public class SpecialtyControllerTest {
-
-    private static final ObjectMapper om = new ObjectMapper();
 
     @Autowired
     private MockMvc mockMvc;
 
-    /**
-     * POST con h_open >= h_close → 400 Bad Request
-     */
+    private static final ObjectMapper om = new ObjectMapper();
+
+    // =========================================================================
+    // INTEGRANTE A - Listado y consulta
+    // =========================================================================
+
+    @Test
+    public void testFindAllSpecialties() throws Exception {
+
+        String FIRST_NAME = "radiology";
+
+        this.mockMvc
+                .perform(get("/specialties"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$[0].name", is(FIRST_NAME)));
+    }
+
+    @Test
+    public void testFindSpecialtyOK() throws Exception {
+
+        int ID = 1;
+        String NAME = "radiology";
+        String OFFICE = "Farewell";
+        int H_OPEN = 8;
+        int H_CLOSE = 18;
+
+        this.mockMvc
+                .perform(get("/specialties/" + ID))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.id", is(ID)))
+                .andExpect(jsonPath("$.name", is(NAME)))
+                .andExpect(jsonPath("$.office", is(OFFICE)))
+                .andExpect(jsonPath("$.hOpen", is(H_OPEN)))
+                .andExpect(jsonPath("$.hClose", is(H_CLOSE)));
+    }
+
+    @Test
+    public void testFindSpecialtyKO() throws Exception {
+
+        this.mockMvc
+                .perform(get("/specialties/666"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    // =========================================================================
+    // INTEGRANTE C - Validaciones y borrado
+    // =========================================================================
+
     @Test
     public void testCreateSpecialty_InvalidSchedule() throws Exception {
 
@@ -38,7 +86,7 @@ public class SpecialtyControllerTest {
                 .name("cardiology")
                 .office("MainHall")
                 .hOpen(10)
-                .hClose(10)   // igual → inválido
+                .hClose(10)
                 .build();
 
         mockMvc.perform(post("/specialties")
@@ -48,16 +96,13 @@ public class SpecialtyControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    /**
-     * POST con horas fuera de 0-23 → 400 Bad Request
-     */
     @Test
     public void testCreateSpecialty_InvalidHourRange() throws Exception {
 
         SpecialtyDTO outOfRange = SpecialtyDTO.builder()
                 .name("neurology")
                 .office("WestWing")
-                .hOpen(25)    // fuera de rango
+                .hOpen(25)
                 .hClose(30)
                 .build();
 
@@ -68,10 +113,6 @@ public class SpecialtyControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    /**
-     * POST para crear + DELETE → 200 OK
-     * Auto-contenida: crea su propio dato antes de borrarlo
-     */
     @Test
     public void testDeleteSpecialty() throws Exception {
 
@@ -82,7 +123,6 @@ public class SpecialtyControllerTest {
                 .hClose(15)
                 .build();
 
-        // CREAR
         ResultActions mvcActions = mockMvc.perform(post("/specialties")
                         .content(om.writeValueAsString(newSpecialty))
                         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON))
@@ -93,7 +133,6 @@ public class SpecialtyControllerTest {
         String response = mvcActions.andReturn().getResponse().getContentAsString();
         Integer id = JsonPath.parse(response).read("$.id");
 
-        // BORRAR
         mockMvc.perform(delete("/specialties/" + id))
                 .andDo(print())
                 .andExpect(status().isOk());

@@ -18,28 +18,35 @@ import java.util.stream.Collectors;
 public class SpecialtyServiceImpl implements SpecialtyService {
 
     private final SpecialtyRepository specialtyRepository;
-    private final SpecialtyMapper     specialtyMapper;
+    private final SpecialtyMapper specialtyMapper;
 
     public SpecialtyServiceImpl(SpecialtyRepository specialtyRepository,
                                 SpecialtyMapper specialtyMapper) {
         this.specialtyRepository = specialtyRepository;
-        this.specialtyMapper     = specialtyMapper;
+        this.specialtyMapper = specialtyMapper;
     }
 
-    // ─── Validación de horario ──────────────────────────────────────────────
+    // ─── Validaciones ──────────────────────────────────────────────────────
 
     private void validateSchedule(SpecialtyDTO dto) throws InvalidScheduleException {
-        if (dto.getHOpen() == null || dto.getHClose() == null) {
-            throw new InvalidScheduleException("h_open and h_close are required");
-        }
-        if (dto.getHOpen() < 0 || dto.getHOpen() > 23
-                || dto.getHClose() < 0 || dto.getHClose() > 23) {
-            throw new InvalidScheduleException("Hours must be between 0 and 23");
-        }
-        if (dto.getHOpen() >= dto.getHClose()) {
+
+        // Regla 1: h_open debe ser menor que h_close
+        if (dto.getHOpen() != null && dto.getHClose() != null
+                && dto.getHOpen() >= dto.getHClose()) {
             throw new InvalidScheduleException(
                     "h_open (" + dto.getHOpen() + ") must be less than h_close ("
                             + dto.getHClose() + ")");
+        }
+
+        // Regla 2: horas deben estar en rango 0-23
+        if (dto.getHOpen() != null && (dto.getHOpen() < 0 || dto.getHOpen() > 23)) {
+            throw new InvalidScheduleException(
+                    "h_open (" + dto.getHOpen() + ") must be between 0 and 23");
+        }
+
+        if (dto.getHClose() != null && (dto.getHClose() < 0 || dto.getHClose() > 23)) {
+            throw new InvalidScheduleException(
+                    "h_close (" + dto.getHClose() + ") must be between 0 and 23");
         }
     }
 
@@ -70,16 +77,20 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public SpecialtyDTO findById(Integer id) throws SpecialtyNotFoundException {
         Optional<Specialty> specialty = specialtyRepository.findById(id);
+
         if (!specialty.isPresent()) {
             throw new SpecialtyNotFoundException("Specialty not found with id: " + id);
         }
+
         return specialtyMapper.mapToDto(specialty.get());
     }
 
     @Override
     public List<SpecialtyDTO> findByName(String name) {
         List<Specialty> list = specialtyRepository.findByName(name);
+
         list.forEach(s -> log.info("" + s));
+
         return list.stream()
                 .map(specialtyMapper::mapToDto)
                 .collect(Collectors.toList());
@@ -88,7 +99,9 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public List<SpecialtyDTO> findByOffice(String office) {
         List<Specialty> list = specialtyRepository.findByOffice(office);
+
         list.forEach(s -> log.info("" + s));
+
         return list.stream()
                 .map(specialtyMapper::mapToDto)
                 .collect(Collectors.toList());
@@ -97,5 +110,13 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     @Override
     public List<Specialty> findAll() {
         return specialtyRepository.findAll();
+    }
+
+    @Override
+    public List<SpecialtyDTO> findAllDTO() {
+        return specialtyRepository.findAll()
+                .stream()
+                .map(specialtyMapper::mapToDto)
+                .collect(Collectors.toList());
     }
 }
