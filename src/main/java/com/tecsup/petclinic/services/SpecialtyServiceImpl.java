@@ -1,4 +1,5 @@
 package com.tecsup.petclinic.services;
+
 import com.tecsup.petclinic.dtos.SpecialtyDTO;
 import com.tecsup.petclinic.entities.Specialty;
 import com.tecsup.petclinic.exceptions.InvalidScheduleException;
@@ -11,9 +12,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 @Service
 @Slf4j
-public class SpecialtyServiceImpl implements SpecialtyService{
+public class SpecialtyServiceImpl implements SpecialtyService {
+
     private final SpecialtyRepository specialtyRepository;
     private final SpecialtyMapper     specialtyMapper;
 
@@ -26,8 +29,14 @@ public class SpecialtyServiceImpl implements SpecialtyService{
     // ─── Validación de horario ──────────────────────────────────────────────
 
     private void validateSchedule(SpecialtyDTO dto) throws InvalidScheduleException {
-        if (dto.getHOpen() != null && dto.getHClose() != null
-                && dto.getHOpen() >= dto.getHClose()) {
+        if (dto.getHOpen() == null || dto.getHClose() == null) {
+            throw new InvalidScheduleException("h_open and h_close are required");
+        }
+        if (dto.getHOpen() < 0 || dto.getHOpen() > 23
+                || dto.getHClose() < 0 || dto.getHClose() > 23) {
+            throw new InvalidScheduleException("Hours must be between 0 and 23");
+        }
+        if (dto.getHOpen() >= dto.getHClose()) {
             throw new InvalidScheduleException(
                     "h_open (" + dto.getHOpen() + ") must be less than h_close ("
                             + dto.getHClose() + ")");
