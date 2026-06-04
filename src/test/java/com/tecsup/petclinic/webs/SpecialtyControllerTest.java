@@ -74,6 +74,76 @@ public class SpecialtyControllerTest {
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
+// =========================================================================
+// INTEGRANTE B — Creación y búsqueda
+// =========================================================================
+
+
+    @Test
+    public void testCreateSpecialty() throws Exception {
+
+
+        String NAME    = "oncology";
+        String OFFICE  = "BuildingA";
+        int    H_OPEN  = 9;
+        int    H_CLOSE = 17;
+
+
+        SpecialtyDTO newSpecialty = SpecialtyDTO.builder()
+                .name(NAME)
+                .office(OFFICE)
+                .hOpen(H_OPEN)
+                .hClose(H_CLOSE)
+                .build();
+
+
+        this.mockMvc
+                .perform(post("/specialties")
+                        .content(om.writeValueAsString(newSpecialty))
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name",   is(NAME)))
+                .andExpect(jsonPath("$.office", is(OFFICE)))
+                .andExpect(jsonPath("$.hOpen",  is(H_OPEN)))
+                .andExpect(jsonPath("$.hClose", is(H_CLOSE)));
+    }
+
+
+    @Test
+    public void testFindByName() throws Exception {
+
+
+        String NAME            = "surgery";
+        String OFFICE_EXPECTED = "Maryland";
+
+
+        this.mockMvc
+                .perform(get("/specialties").param("name", NAME))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$[0].name",   is(NAME)))
+                .andExpect(jsonPath("$[0].office", is(OFFICE_EXPECTED)));
+    }
+
+
+    @Test
+    public void testFindByOffice() throws Exception {
+
+
+        String OFFICE        = "Farewell";
+        String NAME_EXPECTED = "radiology";
+
+
+        this.mockMvc
+                .perform(get("/specialties").param("office", OFFICE))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$[0].name",   is(NAME_EXPECTED)))
+                .andExpect(jsonPath("$[0].office", is(OFFICE)));
+    }
 
     // =========================================================================
     // INTEGRANTE C - Validaciones y borrado
